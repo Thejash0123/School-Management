@@ -8,55 +8,80 @@ import Popup from '../../../components/Popup';
 
 const SubjectForm = () => {
     const [subjects, setSubjects] = useState([{ subName: "", subCode: "", sessions: "" }]);
+    const [errors, setErrors] = useState([{ subName: "", subCode: "", sessions: "" }]);
 
-    const dispatch = useDispatch()
-    const navigate = useNavigate()
-    const params = useParams()
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const params = useParams();
 
     const userState = useSelector(state => state.user);
     const { status, currentUser, response, error } = userState;
 
-    const sclassName = params.id
-    const adminID = currentUser._id
-    const address = "Subject"
+    const sclassName = params.id;
+    const adminID = currentUser._id;
+    const address = "Subject";
 
     const [showPopup, setShowPopup] = useState(false);
     const [message, setMessage] = useState("");
-    const [loader, setLoader] = useState(false)
+    const [loader, setLoader] = useState(false);
 
-    const handleSubjectNameChange = (index) => (event) => {
-        const newSubjects = [...subjects];
-        newSubjects[index].subName = event.target.value;
-        setSubjects(newSubjects);
+    const validateSubject = (subject) => {
+        let tempErrors = { subName: "", subCode: "", sessions: "" };
+
+        // Validation rules
+        if (!subject.subName.trim()) {
+            tempErrors.subName = "Subject Name is required.";
+        } else if (!/^[A-Za-z\s]+$/.test(subject.subName.trim())) {
+            tempErrors.subName = "Subject Name should only contain letters and spaces.";
+        }
+
+        if (!subject.subCode.trim()) {
+            tempErrors.subCode = "Subject Code is required.";
+        } else if (!/^[A-Za-z0-9]+$/.test(subject.subCode.trim())) {
+            tempErrors.subCode = "Subject Code should be alphanumeric without spaces.";
+        }
+
+        if (subject.sessions === "" || isNaN(subject.sessions)) {
+            tempErrors.sessions = "Sessions must be a valid number.";
+        } else if (Number(subject.sessions) < 0) {
+            tempErrors.sessions = "Sessions cannot be negative.";
+        }
+
+        return tempErrors;
     };
 
-    const handleSubjectCodeChange = (index) => (event) => {
+    const handleSubjectChange = (index, field) => (event) => {
+        const { value } = event.target;
         const newSubjects = [...subjects];
-        newSubjects[index].subCode = event.target.value;
+        newSubjects[index][field] = value;
         setSubjects(newSubjects);
-    };
 
-    const handleSessionsChange = (index) => (event) => {
-        const newSubjects = [...subjects];
-        newSubjects[index].sessions = event.target.value || 0;
-        setSubjects(newSubjects);
+        // Validate on change
+        const newErrors = [...errors];
+        newErrors[index] = validateSubject(newSubjects[index]);
+        setErrors(newErrors);
     };
 
     const handleAddSubject = () => {
-        setSubjects([...subjects, { subName: "", subCode: "" }]);
+        setSubjects([...subjects, { subName: "", subCode: "", sessions: "" }]);
+        setErrors([...errors, { subName: "", subCode: "", sessions: "" }]);
     };
 
     const handleRemoveSubject = (index) => () => {
         const newSubjects = [...subjects];
         newSubjects.splice(index, 1);
         setSubjects(newSubjects);
+
+        const newErrors = [...errors];
+        newErrors.splice(index, 1);
+        setErrors(newErrors);
     };
 
     const fields = {
         sclassName,
         subjects: subjects.map((subject) => ({
-            subName: subject.subName,
-            subCode: subject.subCode,
+            subName: subject.subName.trim(),
+            subCode: subject.subCode.trim(),
             sessions: subject.sessions,
         })),
         adminID,
@@ -64,32 +89,48 @@ const SubjectForm = () => {
 
     const submitHandler = (event) => {
         event.preventDefault();
-        setLoader(true)
-        dispatch(addStuff(fields, address))
+
+        let formValid = true;
+        const validationErrors = subjects.map((subject) => {
+            const subjectErrors = validateSubject(subject);
+            if (subjectErrors.subName || subjectErrors.subCode || subjectErrors.sessions) {
+                formValid = false;
+            }
+            return subjectErrors;
+        });
+
+        setErrors(validationErrors);
+
+        if (!formValid) {
+            setMessage("Please fix validation errors before submitting.");
+            setShowPopup(true);
+            return;
+        }
+
+        setLoader(true);
+        dispatch(addStuff(fields, address));
     };
 
     useEffect(() => {
         if (status === 'added') {
             navigate("/Admin/subjects");
-            dispatch(underControl())
-            setLoader(false)
-        }
-        else if (status === 'failed') {
-            setMessage(response)
-            setShowPopup(true)
-            setLoader(false)
-        }
-        else if (status === 'error') {
-            setMessage("Network Error")
-            setShowPopup(true)
-            setLoader(false)
+            dispatch(underControl());
+            setLoader(false);
+        } else if (status === 'failed') {
+            setMessage(response);
+            setShowPopup(true);
+            setLoader(false);
+        } else if (status === 'error') {
+            setMessage("Network Error");
+            setShowPopup(true);
+            setLoader(false);
         }
     }, [status, navigate, error, response, dispatch]);
 
     return (
         <form onSubmit={submitHandler}>
             <Box mb={2}>
-                <Typography variant="h6" >Add Subjects</Typography>
+                <Typography variant="h6">Add Subjects</Typography>
             </Box>
             <Grid container spacing={2}>
                 {subjects.map((subject, index) => (
@@ -100,8 +141,10 @@ const SubjectForm = () => {
                                 label="Subject Name"
                                 variant="outlined"
                                 value={subject.subName}
-                                onChange={handleSubjectNameChange(index)}
+                                onChange={handleSubjectChange(index, 'subName')}
                                 sx={styles.inputField}
+                                error={!!errors[index]?.subName}
+                                helperText={errors[index]?.subName}
                                 required
                             />
                         </Grid>
@@ -111,8 +154,10 @@ const SubjectForm = () => {
                                 label="Subject Code"
                                 variant="outlined"
                                 value={subject.subCode}
-                                onChange={handleSubjectCodeChange(index)}
+                                onChange={handleSubjectChange(index, 'subCode')}
                                 sx={styles.inputField}
+                                error={!!errors[index]?.subCode}
+                                helperText={errors[index]?.subCode}
                                 required
                             />
                         </Grid>
@@ -124,8 +169,10 @@ const SubjectForm = () => {
                                 type="number"
                                 inputProps={{ min: 0 }}
                                 value={subject.sessions}
-                                onChange={handleSessionsChange(index)}
+                                onChange={handleSubjectChange(index, 'sessions')}
                                 sx={styles.inputField}
+                                error={!!errors[index]?.sessions}
+                                helperText={errors[index]?.sessions}
                                 required
                             />
                         </Grid>
@@ -167,9 +214,9 @@ const SubjectForm = () => {
             </Grid>
         </form>
     );
-}
+};
 
-export default SubjectForm
+export default SubjectForm;
 
 const styles = {
     inputField: {

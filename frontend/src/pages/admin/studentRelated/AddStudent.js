@@ -8,9 +8,9 @@ import { getAllSclasses } from '../../../redux/sclassRelated/sclassHandle';
 import { CircularProgress } from '@mui/material';
 
 const AddStudent = ({ situation }) => {
-    const dispatch = useDispatch()
-    const navigate = useNavigate()
-    const params = useParams()
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const params = useParams();
 
     const userState = useSelector(state => state.user);
     const { status, currentUser, response, error } = userState;
@@ -18,13 +18,13 @@ const AddStudent = ({ situation }) => {
 
     const [name, setName] = useState('');
     const [rollNum, setRollNum] = useState('');
-    const [password, setPassword] = useState('')
-    const [className, setClassName] = useState('')
-    const [sclassName, setSclassName] = useState('')
+    const [password, setPassword] = useState('');
+    const [className, setClassName] = useState('');
+    const [sclassName, setSclassName] = useState('');
 
-    const adminID = currentUser._id
-    const role = "Student"
-    const attendance = []
+    const adminID = currentUser._id;
+    const role = "Student";
+    const attendance = [];
 
     useEffect(() => {
         if (situation === "Class") {
@@ -34,7 +34,7 @@ const AddStudent = ({ situation }) => {
 
     const [showPopup, setShowPopup] = useState(false);
     const [message, setMessage] = useState("");
-    const [loader, setLoader] = useState(false)
+    const [loader, setLoader] = useState(false);
 
     useEffect(() => {
         dispatch(getAllSclasses(adminID, "Sclass"));
@@ -53,34 +53,67 @@ const AddStudent = ({ situation }) => {
         }
     }
 
-    const fields = { name, rollNum, password, sclassName, adminID, role, attendance }
+    const fields = { name, rollNum, password, sclassName, adminID, role, attendance };
 
     const submitHandler = (event) => {
-        event.preventDefault()
+        event.preventDefault();
+
+        // VALIDATIONS
+        if (!name.trim()) {
+            setMessage("Name cannot be empty");
+            setShowPopup(true);
+            return;
+        }
+        if (!/^[A-Za-z\s]+$/.test(name)) {
+            setMessage("Name can only contain letters and spaces");
+            setShowPopup(true);
+            return;
+        }
+        if (!rollNum.trim()) {
+            setMessage("Roll Number cannot be empty");
+            setShowPopup(true);
+            return;
+        }
+        if (!/^\d+$/.test(rollNum) || parseInt(rollNum) <= 0) {
+            setMessage("Roll Number must be a positive number");
+            setShowPopup(true);
+            return;
+        }
+        if (!password.trim()) {
+            setMessage("Password cannot be empty");
+            setShowPopup(true);
+            return;
+        }
+        if (password.length < 6) {
+            setMessage("Password must be at least 6 characters long");
+            setShowPopup(true);
+            return;
+        }
         if (sclassName === "") {
-            setMessage("Please select a classname")
-            setShowPopup(true)
+            setMessage("Please select a class");
+            setShowPopup(true);
+            return;
         }
-        else {
-            setLoader(true)
-            dispatch(registerUser(fields, role))
-        }
+
+        // If everything is valid, proceed
+        setLoader(true);
+        dispatch(registerUser(fields, role));
     }
 
     useEffect(() => {
         if (status === 'added') {
-            dispatch(underControl())
-            navigate(-1)
+            dispatch(underControl());
+            navigate(-1);
         }
         else if (status === 'failed') {
-            setMessage(response)
-            setShowPopup(true)
-            setLoader(false)
+            setMessage(response);
+            setShowPopup(true);
+            setLoader(false);
         }
         else if (status === 'error') {
-            setMessage("Network Error")
-            setShowPopup(true)
-            setLoader(false)
+            setMessage("Network Error");
+            setShowPopup(true);
+            setLoader(false);
         }
     }, [status, navigate, error, response, dispatch]);
 
@@ -89,20 +122,27 @@ const AddStudent = ({ situation }) => {
             <div className="register">
                 <form className="registerForm" onSubmit={submitHandler}>
                     <span className="registerTitle">Add Student</span>
+
                     <label>Name</label>
-                    <input className="registerInput" type="text" placeholder="Enter student's name..."
+                    <input
+                        className="registerInput"
+                        type="text"
+                        placeholder="Enter student's name..."
                         value={name}
                         onChange={(event) => setName(event.target.value)}
-                        autoComplete="name" required />
+                        autoComplete="name"
+                        required
+                    />
 
-                    {
-                        situation === "Student" &&
+                    {situation === "Student" && (
                         <>
                             <label>Class</label>
                             <select
                                 className="registerInput"
                                 value={className}
-                                onChange={changeHandler} required>
+                                onChange={changeHandler}
+                                required
+                            >
                                 <option value='Select Class'>Select Class</option>
                                 {sclassesList.map((classItem, index) => (
                                     <option key={index} value={classItem.sclassName}>
@@ -111,19 +151,28 @@ const AddStudent = ({ situation }) => {
                                 ))}
                             </select>
                         </>
-                    }
+                    )}
 
                     <label>Roll Number</label>
-                    <input className="registerInput" type="number" placeholder="Enter student's Roll Number..."
+                    <input
+                        className="registerInput"
+                        type="number"
+                        placeholder="Enter student's Roll Number..."
                         value={rollNum}
                         onChange={(event) => setRollNum(event.target.value)}
-                        required />
+                        required
+                    />
 
                     <label>Password</label>
-                    <input className="registerInput" type="password" placeholder="Enter student's password..."
+                    <input
+                        className="registerInput"
+                        type="password"
+                        placeholder="Enter student's password..."
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
-                        autoComplete="new-password" required />
+                        autoComplete="new-password"
+                        required
+                    />
 
                     <button className="registerButton" type="submit" disabled={loader}>
                         {loader ? (
@@ -136,7 +185,7 @@ const AddStudent = ({ situation }) => {
             </div>
             <Popup message={message} setShowPopup={setShowPopup} showPopup={showPopup} />
         </>
-    )
+    );
 }
 
-export default AddStudent
+export default AddStudent;

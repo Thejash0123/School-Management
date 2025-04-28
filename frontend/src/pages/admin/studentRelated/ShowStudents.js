@@ -43,16 +43,19 @@ const ShowStudents = () => {
     const [message, setMessage] = React.useState("");
 
     const deleteHandler = (deleteID, address) => {
-        console.log(deleteID);
-        console.log(address);
-        setMessage("Sorry the delete function has been disabled for now.")
-        setShowPopup(true)
-
-        // dispatch(deleteUser(deleteID, address))
-        //     .then(() => {
-        //         dispatch(getAllStudents(currentUser._id));
-        //     })
-    }
+        console.log("Deleting:", deleteID, "from:", address);
+    
+        dispatch(deleteUser(deleteID, address))
+            .then(() => {
+                dispatch(getAllStudents(currentUser._id));
+            })
+            .catch((error) => {
+                console.error("Delete failed:", error);
+                setMessage("Failed to delete student. Please try again.");
+                setShowPopup(true);
+            });
+    };
+    
 
     const studentColumns = [
         { id: 'name', label: 'Name', minWidth: 170 },
