@@ -13,7 +13,7 @@ import {
     getError,
 } from './userSlice';
 
-
+// Login User
 export const loginUser = (fields, role) => async (dispatch) => {
     dispatch(authRequest());
 
@@ -31,6 +31,7 @@ export const loginUser = (fields, role) => async (dispatch) => {
     }
 };
 
+// Register User
 export const registerUser = (fields, role) => async (dispatch) => {
     dispatch(authRequest());
 
@@ -52,10 +53,12 @@ export const registerUser = (fields, role) => async (dispatch) => {
     }
 };
 
+// Logout User
 export const logoutUser = () => (dispatch) => {
     dispatch(authLogout());
 };
 
+// Get User Details
 export const getUserDetails = (id, address) => async (dispatch) => {
     dispatch(getRequest());
 
@@ -67,29 +70,25 @@ export const getUserDetails = (id, address) => async (dispatch) => {
     } catch (error) {
         dispatch(getError(error));
     }
-}
+};
 
-// export const deleteUser = (id, address) => async (dispatch) => {
-//     dispatch(getRequest());
-
-//     try {
-//         const result = await axios.delete(`${process.env.REACT_APP_BASE_URL}/${address}/${id}`);
-//         if (result.data.message) {
-//             dispatch(getFailed(result.data.message));
-//         } else {
-//             dispatch(getDeleteSuccess());
-//         }
-//     } catch (error) {
-//         dispatch(getError(error));
-//     }
-// }
-
-
+// Delete User (corrected version)
 export const deleteUser = (id, address) => async (dispatch) => {
     dispatch(getRequest());
-    dispatch(getFailed("Sorry the delete function has been disabled for now."));
-}
 
+    try {
+        const result = await axios.delete(`${process.env.REACT_APP_BASE_URL}/${address}/${id}`);
+        if (result.data.message) {
+            dispatch(getFailed(result.data.message)); // If message exists, dispatch failure
+        } else {
+            dispatch(getDeleteSuccess()); // If no message, dispatch success
+        }
+    } catch (error) {
+        dispatch(getError(error)); // If there's an error, dispatch it
+    }
+};
+
+// Update User
 export const updateUser = (fields, id, address) => async (dispatch) => {
     dispatch(getRequest());
 
@@ -106,8 +105,9 @@ export const updateUser = (fields, id, address) => async (dispatch) => {
     } catch (error) {
         dispatch(getError(error));
     }
-}
+};
 
+// Add Stuff (for creating new users, etc.)
 export const addStuff = (fields, address) => async (dispatch) => {
     dispatch(authRequest());
 

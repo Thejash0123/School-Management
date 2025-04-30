@@ -17,46 +17,61 @@ import SpeedDialTemplate from '../../../components/SpeedDialTemplate';
 import Popup from '../../../components/Popup';
 
 const ShowClasses = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const { sclassesList, loading, error, getresponse } = useSelector((state) => state.sclass);
-  const { currentUser } = useSelector(state => state.user)
+  const { currentUser } = useSelector(state => state.user);
 
-  const adminID = currentUser._id
+  const adminID = currentUser._id;
 
   useEffect(() => {
     dispatch(getAllSclasses(adminID, "Sclass"));
   }, [adminID, dispatch]);
 
   if (error) {
-    console.log(error)
+    console.log(error);
   }
 
   const [showPopup, setShowPopup] = useState(false);
   const [message, setMessage] = useState("");
+  const [isDeleteEnabled, setIsDeleteEnabled] = useState(true);  // State to control the delete function
 
   const deleteHandler = (deleteID, address) => {
-    console.log(deleteID);
-    console.log(address);
-    setMessage("Sorry the delete function has been disabled for now.")
-    setShowPopup(true)
-    // dispatch(deleteUser(deleteID, address))
-    //   .then(() => {
-    //     dispatch(getAllSclasses(adminID, "Sclass"));
-    //   })
-  }
-
+    console.log("Delete ID: ", deleteID);  // Check ID being sent
+    console.log("Address: ", address);    // Check address
+  
+    if (isDeleteEnabled) {
+      setMessage("Deleting... Please wait.");
+      setShowPopup(true);
+  
+      dispatch(deleteUser(deleteID, address))
+        .then(() => {
+          dispatch(getAllSclasses(adminID, "Sclass"));
+          setMessage("User deleted successfully.");
+          setShowPopup(true);
+        })
+        .catch((error) => {
+          setMessage("Error deleting user.");
+          setShowPopup(true);
+          console.error("Delete Error:", error);
+        });
+    } else {
+      setMessage("Sorry, the delete function has been disabled for now.");
+      setShowPopup(true);
+    }
+  };
+  
   const sclassColumns = [
     { id: 'name', label: 'Class Name', minWidth: 170 },
-  ]
+  ];
 
   const sclassRows = sclassesList && sclassesList.length > 0 && sclassesList.map((sclass) => {
     return {
       name: sclass.sclassName,
       id: sclass._id,
     };
-  })
+  });
 
   const SclassButtonHaver = ({ row }) => {
     const actions = [
@@ -129,7 +144,7 @@ const ShowClasses = () => {
         </Menu>
       </>
     );
-  }
+  };
 
   const actions = [
     {
@@ -164,7 +179,6 @@ const ShowClasses = () => {
         </>
       }
       <Popup message={message} setShowPopup={setShowPopup} showPopup={showPopup} />
-
     </>
   );
 };

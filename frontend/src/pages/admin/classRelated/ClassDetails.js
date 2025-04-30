@@ -51,12 +51,12 @@ const ClassDetails = () => {
         console.log(address);
         setMessage("Sorry the delete function has been disabled for now.")
         setShowPopup(true)
-        // dispatch(deleteUser(deleteID, address))
-        //     .then(() => {
-        //         dispatch(getClassStudents(classID));
-        //         dispatch(resetSubjects())
-        //         dispatch(getSubjectList(classID, "ClassSubjects"))
-        //     })
+        dispatch(deleteUser(deleteID, address))
+             .then(() => {
+                 dispatch(getClassStudents(classID));
+                 dispatch(resetSubjects())
+                 dispatch(getSubjectList(classID, "ClassSubjects"))
+             })
     }
 
     const subjectColumns = [
